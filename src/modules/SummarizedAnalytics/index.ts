@@ -1,0 +1,1 @@
+export { SummarizedAnalyticsModule } from "./SummarizedAnalyticsModule";

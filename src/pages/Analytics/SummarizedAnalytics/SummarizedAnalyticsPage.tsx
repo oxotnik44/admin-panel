@@ -1,13 +1,11 @@
 import React from "react";
-import { AnalyticsModule } from "src/modules/Analistics";
+import { SummarizedAnalyticsModule } from "src/modules/SummarizedAnalytics";
 
-const AnalyticsPage: React.FC = () => {
+export const SummarizedAnalyticsPage: React.FC = () => {
   return (
     <div className="flex flex-col p-4 bg-gray-50">
       <h1 className="text-2xl font-semibold mb-4 text-black">Аналитика</h1>
-      <AnalyticsModule />
+      <SummarizedAnalyticsModule />
     </div>
   );
 };
-
-export default AnalyticsPage;

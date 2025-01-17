@@ -1,0 +1,1 @@
+export { HourlyAnalyticsModule } from "./HourlyAnalisticsModule";

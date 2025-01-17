@@ -1,5 +1,5 @@
 export const links = [
-  { name: "Аналитика", to: "/analytics" },
-  { name: "Товарный остаток", to: "/asd" },
+  { name: "Аналитика", to: "/summarizedAnalytics" },
+  { name: "Аналитика по часам", to: "/hourlyAnalistics" },
   { name: "Автоматы", to: "#" },
 ];

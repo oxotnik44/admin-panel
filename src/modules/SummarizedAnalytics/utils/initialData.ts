@@ -224,19 +224,19 @@ export const allColumns: ColumnDef<Product>[] = [
   {
     id: "sold",
     accessorKey: "sold",
-    header: "Количество проданных штук",
+    header: "Количество (шт.)",
     cell: (info) => info.getValue(),
   },
   {
     id: "price",
     accessorKey: "price",
-    header: "Цена продажи",
-    cell: (info) => `₽ ${info.getValue()}`,
+    header: "Цена (₽)",
+    cell: (info) => ` ${info.getValue()}`,
   },
   {
     id: "total",
     accessorKey: "total",
-    header: "Сумма",
-    cell: (info) => `₽ ${info.getValue()}`,
+    header: "Сумма (₽)",
+    cell: (info) => ` ${info.getValue()}`,
   },
 ];
