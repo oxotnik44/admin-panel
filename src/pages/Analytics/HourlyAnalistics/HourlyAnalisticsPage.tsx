@@ -12,6 +12,7 @@ export const HourlyAnalisticsPage: React.FC = () => {
   const [startDate, endDate] = dateRange;
   const isSingleDaySelected =
     startDate && endDate && startDate.getTime() === endDate.getTime();
+
   return (
     <div className="flex flex-col p-4 bg-gray-50">
       <div className="mb-4 flex items-center space-x-4">

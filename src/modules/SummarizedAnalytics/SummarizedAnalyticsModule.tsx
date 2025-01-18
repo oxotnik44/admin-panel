@@ -48,6 +48,7 @@ export const SummarizedAnalyticsModule: React.FC = () => {
       <SummarizedData
         totalSales={totalSummary.totalSales}
         totalRevenue={totalSummary.totalRevenue}
+        isHourlySummarized={false}
       />
     </div>
   );

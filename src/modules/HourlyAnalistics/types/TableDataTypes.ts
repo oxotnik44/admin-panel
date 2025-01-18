@@ -10,6 +10,8 @@ export type ProductData = {
   date?: string;
   sales: number;
   amount: number;
+  residue?: number;
+  timestamp?: string;
 };
 
 export interface UseProductDataProps {
