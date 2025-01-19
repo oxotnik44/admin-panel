@@ -1,16 +1,14 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+
 import { useProductData } from "./hooks/useProductData";
 import { getProductsForHour } from "./hooks/useProductsForDay";
 import CheckboxFilter from "./components/CheckboxFilter";
 import DateRange from "./ui/DateRange";
-import ButtonBack from "./ui/ButtonBack";
+
 import SalesTable from "./components/SalesTable";
-import ViewSelector from "./components/ViewSelector";
+
 import { SummarizedData } from "../SummarizedAnalytics/components/SummarizedData";
 import { ProductData } from "./types/TableDataTypes";
-import { initialData } from "../SummarizedAnalytics/utils/initialData";
-import { Product } from "../SummarizedAnalytics/types/productTypes";
 
 type HourlyAnalyticsModuleProps = {
   initialData: {
@@ -23,6 +21,7 @@ type HourlyAnalyticsModuleProps = {
   productName: string;
   dateRange: [Date | null, Date | null];
   isSingleDaySelected: boolean | null;
+  selectedView: string;
 };
 
 export const HourlyAnalyticsModule: React.FC<HourlyAnalyticsModuleProps> = ({
@@ -30,17 +29,12 @@ export const HourlyAnalyticsModule: React.FC<HourlyAnalyticsModuleProps> = ({
   productName,
   dateRange,
   isSingleDaySelected,
+  selectedView,
 }) => {
-  const navigate = useNavigate();
-  const onBackClick = () => {
-    navigate("/summarizedAnalytics"); // Возвращает на предыдущую страницу в истории
-  };
-
   const [filterNoSales, setFilterNoSales] = useState(false);
   const [openHours, setOpenHours] = useState<Set<string | undefined>>(
     new Set()
   ); // Используем Set для хранения открытых часов или дат
-  const [selectedView, setSelectedView] = useState("product"); // Состояние для выбора "товар" или "день"
   const isDayAnalitics = selectedView === "day";
 
   let productData = useProductData({
@@ -53,7 +47,6 @@ export const HourlyAnalyticsModule: React.FC<HourlyAnalyticsModuleProps> = ({
   });
 
   // Функция для вычисления общей суммы продаж
-  const totalSales = calculateAverageSales(productData);
 
   // Функция для обработки клика по часу или дате
   const handleHourClick = (hour: string | undefined) => {
@@ -68,89 +61,66 @@ export const HourlyAnalyticsModule: React.FC<HourlyAnalyticsModuleProps> = ({
       return newOpenHours;
     });
   };
-  const calculateLostRevenue = (
-    item: ProductData,
-    productData: ProductData[]
-  ): number => {
-    // Если и продажи, и остаток равны 0, то выводим среднюю выручку
-    if (item.sales === 0 && item.residue === 0) {
-      const totalSales = productData.reduce(
-        (total, item) => total + item.sales,
-        0
+  const renderProductTable = () => {
+    let sum = 0;
+
+    productData.map((item) => {
+      // Получаем дату или час в зависимости от типа
+      const itemDateOrHour = "date" in item ? item.date : item.hour;
+      // Получаем список продуктов для данного интервала
+      const filteredProducts = getProductsForHour(
+        itemDateOrHour as string,
+        dateRange,
+        productName
       );
-      const averageRevenue = Math.round(totalSales / productData.length); // Средняя выручка
-      return averageRevenue; // Возвращаем среднюю выручку
-    }
-
-    // Если остаток больше нуля, то упущенная выгода = остаток * цена товара
-    if (item.residue === 0 && item.sales === 0) {
-      const totalSales = productData.reduce(
-        (total, item) => total + item.sales,
-        0
-      );
-      return totalSales;
-    }
-
-    // В остальных случаях возвращаем 0
-    return null;
-  };
-  const calculateTotalLostRevenue = (
-    productData: Product[],
-    start: Date | null,
-    end: Date | null
-  ): number => {
-    // Инициализация переменной для хранения общей суммы
-    let totalRevenue = 0;
-
-    // Если start или end равны null, то вернем 0 или можно выбросить ошибку в зависимости от вашего подхода
-    if (!start || !end) {
-      throw new Error("Invalid date range, start or end is null");
-    }
-
-    // Преобразуем start и end в формат UTC, чтобы избежать проблем с часовыми поясами
-    const startUTC = new Date(start.toISOString());
-    const endUTC = new Date(end.toISOString());
-
-    // Перебор всех элементов данных
-    productData.forEach((item) => {
-      const itemDate = new Date(item.timestamp); // Преобразуем timestamp в объект Date
-      // Преобразуем itemDate в формат UTC для корректного сравнения
-      const itemDateUTC = new Date(itemDate.toISOString());
-
-      // Проверяем, попадает ли текущий элемент в заданный промежуток времени
-      if (itemDateUTC >= startUTC && itemDateUTC <= endUTC) {
-        // Суммируем цену каждого элемента в пределах интервала
-
-        totalRevenue += item.price;
-      }
+      filteredProducts.map((item) => {
+        if (selectedView === "day") {
+          if (item.sold !== 0) {
+            sum += item.price * item.sold;
+          }
+        } else {
+          // Сравниваем item.name с productName, а не с целым массивом
+          if (item.name === productName) {
+            if (item.sold !== 0) {
+              sum += item.price * item.sold;
+            }
+          }
+        }
+      });
     });
 
-    // Делим на 24, чтобы распределить выручку по часам
-    return totalRevenue / 24;
+    return Math.round(sum / 24);
+  };
+  const avaragePerHour = renderProductTable();
+
+  const calculateTotalLostRevenue = (): number => {
+    let sum = 0;
+    let lost = 0;
+    productData.map((item) => {
+      const itemDateOrHour = "date" in item ? item.date : item.hour;
+      let a = getProductsForHour(
+        itemDateOrHour as string,
+        dateRange,
+        productName
+      );
+      if (a.length !== 0) {
+        lost++;
+      }
+      a.map((item) => {
+        if (item.sold !== 0) {
+          sum += item.price * item.sold;
+        }
+      });
+    });
+    return (sum / 24) * lost;
   };
 
-  const [start, end] = dateRange;
-
-  // Если start или end равны null, заменяем их на текущую дату
-  const validStart = start ?? new Date();
-  const validEnd = end ?? new Date();
-
   // Если даты не совпадают, можно просто использовать диапазон дат
-  const totalLostRevenue = calculateTotalLostRevenue(
-    initialData,
-    validStart,
-    validEnd
-  );
-
+  const totalLostRevenue = calculateTotalLostRevenue();
   const totalRevenue = calculateTotalRevenue(productData);
   return (
     <div>
-      <ButtonBack onClick={onBackClick} />
       <DateRange dateRange={dateRange} productName={productName} />
-      <ViewSelector
-        selectedView={selectedView}
-        onChange={(value) => setSelectedView(value)}
-      />
 
       {/* Фильтрация по дням/часам */}
       <CheckboxFilter
@@ -167,26 +137,17 @@ export const HourlyAnalyticsModule: React.FC<HourlyAnalyticsModuleProps> = ({
         handleHourClick={handleHourClick}
         getProductsForHour={getProductsForHour}
         dateRange={dateRange}
+        productName={productName}
+        selectedView={selectedView}
       />
       <SummarizedData
-        totalSales={totalSales}
+        totalSales={avaragePerHour}
         totalRevenue={totalRevenue}
         isHourlySummarized={true}
         totalLostRevenue={totalLostRevenue}
       />
     </div>
   );
-};
-
-// Функция для подсчета суммы всех продаж
-const calculateAverageSales = (productData: ProductData[]): number => {
-  // Если массив пуст, возвращаем 0, чтобы избежать деления на ноль
-
-  // Суммируем все продажи
-  const totalSales = productData.reduce((total, item) => total + item.sales, 0);
-
-  // Вычисляем среднее количество продаж и округляем до целого числа
-  return totalSales; // Округление до ближайшего целого числа
 };
 
 const calculateTotalRevenue = (productData: ProductData[]): number => {

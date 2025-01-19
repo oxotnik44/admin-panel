@@ -1,6 +1,7 @@
 import React from "react";
 import ProductDetailsTable from "./ProductDetailsTable";
 import { ProductData } from "../types/TableDataTypes";
+import { initialData } from "src/modules/SummarizedAnalytics/utils/initialData";
 
 interface SalesTableProps {
   isSingleDaySelected: boolean | null;
@@ -12,6 +13,8 @@ interface SalesTableProps {
     dateRange: [Date | null, Date | null]
   ) => any[];
   dateRange: [Date | null, Date | null];
+  productName: string | null;
+  selectedView: string;
 }
 
 const SalesTable: React.FC<SalesTableProps> = ({
@@ -21,35 +24,69 @@ const SalesTable: React.FC<SalesTableProps> = ({
   handleHourClick,
   getProductsForHour,
   dateRange,
+  productName,
+  selectedView,
 }) => {
-  // Функция для расчета упущенной выгоды
-  const calculateLostRevenue = (
-    item: ProductData,
-    productData: ProductData[]
-  ): number => {
-    // Если и продажи, и остаток равны 0, то выводим среднюю выручку
-    if (item.sales === 0 && item.residue === 0) {
-      const totalSales = productData.reduce(
-        (total, item) => total + item.sales,
-        0
-      );
-      const averageRevenue = Math.round(totalSales / productData.length); // Средняя выручка
-      return averageRevenue; // Возвращаем среднюю выручку
-    }
+  let sum = 0;
 
-    // Если остаток больше нуля, то упущенная выгода = остаток * цена товара
+  const renderProductTable = (item: ProductData) => {
+    // Обход всех продуктов
+    const itemDateOrHour = "date" in item ? item.date : item.hour;
+
+    // Получаем продукты для часа/даты
+    const products = getProductsForHour(itemDateOrHour as string, dateRange);
+    // Обход продуктов и вычисление суммы
+    products.forEach((product) => {
+      if (product.sold !== 0) {
+        sum += product.price * product.sold;
+      }
+    });
+
+    // Условие для проверки остатка и продаж
     if (item.residue === 0 && item.sales === 0) {
-      const totalSales = productData.reduce(
-        (total, item) => total + item.sales,
-        0
-      );
-      return totalSales;
+      return Math.round(sum / 24); // Возвращаем усреднённую сумму
     }
 
-    // В остальных случаях возвращаем 0
-    return null;
+    // Если условие не выполнено, возвращаем 0 или null, в зависимости от логики
+    return 0;
   };
+  const a = (item: any) => {
+    if (!item || !item.date) {
+      console.error("Дата отсутствует в item");
+      return []; // Возвращаем пустой массив, если дата отсутствует
+    }
+    // Разделяем строку на день, месяц и год и создаём объект Date
+    const [day, month, year] = item.date.split(".");
+    if (!day || !month || !year) {
+      console.error("Некорректный формат даты", item.date);
+      return []; // Возвращаем пустой массив в случае некорректного формата
+    }
 
+    const itemDate = new Date(`${year}-${month}-${day}T14:00:00`);
+
+    // Фильтруем initialData по совпадению дат
+    const filteredInitialData = initialData.filter((data) => {
+      const dataDate = new Date(data.timestamp);
+      return (
+        dataDate.toISOString().slice(0, 10) ===
+        itemDate.toISOString().slice(0, 10)
+      );
+    });
+    // Формируем объект с данными для текущей даты
+    return [
+      {
+        productDate: itemDate.toISOString().slice(0, 10), // Дата в формате YYYY-MM-DD
+        items: filteredInitialData.map((data) => ({
+          timestamp: new Date(data.timestamp).toLocaleTimeString("ru-RU"), // Время из initialData
+          name: data.name, // Название товара
+          sold: data.sold, // Количество проданного
+          price: data.price, // Цена за единицу
+          total: data.total, // Сумма
+          productResidue: data.residue, // Остаток
+        })),
+      },
+    ];
+  };
   return (
     <div>
       <h3 className="text-xl font-semibold mb-4 text-black">
@@ -62,16 +99,16 @@ const SalesTable: React.FC<SalesTableProps> = ({
               {isSingleDaySelected ? "Час" : "Дата"}
             </th>
             <th className="border border-gray-300 p-4 text-left text-sm font-medium text-black">
-              Продажи
+              Продажи (шт.)
             </th>
             <th className="border border-gray-300 p-4 text-left text-sm font-medium text-black">
-              Остаток
+              Остаток (шт.)
             </th>
             <th className="border border-gray-300 p-4 text-left text-sm font-medium text-black">
-              Выручка
+              Выручка <span className="ml-1">₽</span>
             </th>
             <th className="border border-gray-300 p-4 text-left text-sm font-medium text-black">
-              Упущенная выгода
+              Упущенная выгода <span className="ml-1">₽</span>
             </th>
           </tr>
         </thead>
@@ -103,7 +140,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
                   {item.amount}
                 </td>
                 <td className="border border-gray-300 p-4 text-sm text-black">
-                  {calculateLostRevenue(item, productData)}
+                  {renderProductTable(item)}
                   {/* Отображаем упущенную выгоду */}
                 </td>
               </tr>
@@ -113,11 +150,19 @@ const SalesTable: React.FC<SalesTableProps> = ({
                 <tr>
                   <td colSpan={3}>
                     <ProductDetailsTable
-                      products={getProductsForHour(
-                        ("date" in item ? item.date : item.hour) as string,
-                        dateRange
-                      )}
+                      products={
+                        isSingleDaySelected
+                          ? getProductsForHour(
+                              ("date" in item
+                                ? item.date
+                                : item.hour) as string,
+                              dateRange
+                            )
+                          : a(item)
+                      }
                       isSingleDaySelected={isSingleDaySelected}
+                      productName={productName}
+                      selectedView={selectedView}
                     />
                   </td>
                 </tr>
