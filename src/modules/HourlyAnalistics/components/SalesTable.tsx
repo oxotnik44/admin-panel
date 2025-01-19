@@ -137,7 +137,7 @@ const SalesTable: React.FC<SalesTableProps> = ({
                   {item.residue}
                 </td>
                 <td className="border border-gray-300 p-4 text-sm text-black">
-                  {item.amount}
+                  {Number(item.amount.toFixed(2))}
                 </td>
                 <td className="border border-gray-300 p-4 text-sm text-black">
                   {renderProductTable(item)}
