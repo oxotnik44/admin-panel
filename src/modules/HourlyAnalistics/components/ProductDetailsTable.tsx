@@ -35,24 +35,8 @@ const ProductDetailsTable: React.FC<ProductDetailsTableProps> = ({
   if (isSingleDaySelected && selectedView === "product") {
     // Фильтруем только те элементы, которые соответствуют productName
     filteredProducts = filteredProducts.filter((item) => {
-      item.name === productName;
-    });
-  }
-  if (!isSingleDaySelected && selectedView === "product") {
-    let sum = 0;
-    const b = filteredProducts;
-    // Фильтруем только те элементы, которые соответствуют productName
-    b.filter((item) => {
-      // Проверяем, если имя товара совпадает с productName
-
-      item.items.map((item: any) => {
-
-        if (item.name === productName) {
-          sum += item.sold * item.price;
-        }
-      });
-      console.log(sum); // Выводим итоговую сумму
-
+      console.log(item.name === productName); // Для отладки
+      return item.name === productName; // Нужно вернуть true или false для фильтрации
     });
   }
 
