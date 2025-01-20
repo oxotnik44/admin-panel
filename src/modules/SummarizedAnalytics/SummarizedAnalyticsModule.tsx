@@ -32,7 +32,7 @@ export const SummarizedAnalyticsModule: React.FC = () => {
           onChange={setDateRange}
           isClearable
           placeholderText="Выберите диапазон"
-          className="border px-2 py-1 rounded"
+          className="border border-gray-400 px-2 py-1 rounded bg-white text-black focus:border-blue-500 focus:ring focus:ring-blue-300 placeholder-black"
           locale="ru"
         />
       </div>

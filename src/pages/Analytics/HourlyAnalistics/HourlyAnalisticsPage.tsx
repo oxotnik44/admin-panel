@@ -30,13 +30,13 @@ export const HourlyAnalisticsPage: React.FC = () => {
           onChange={setDateRange}
           isClearable
           placeholderText="Выберите диапазон"
-          className="border px-2 py-1 rounded"
+          className="border border-gray-400 px-2 py-1 rounded bg-white text-black focus:border-blue-500 focus:ring focus:ring-blue-300 placeholder-black"
           locale="ru"
         />
       </div>
       {selectedView === "product" && (
         <div className="mb-4">
-          <label className="block text-xs font-medium text-gray-700 mb-2">
+          <label className="block text-base font-medium text-gray-700 mb-2">
             {" "}
             {/* Уменьшили текст */}
             Выберите товар
@@ -44,7 +44,7 @@ export const HourlyAnalisticsPage: React.FC = () => {
           <select
             value={selectedProduct}
             onChange={(e) => setSelectedProduct(e.target.value)}
-            className="border px-2 py-1 rounded w-max-[100px]"
+            className="border px-2 py-1 rounded bg-white text-black w-max"
           >
             <option value="">Выберите товар</option>
             {uniqueProductNames.map((productName, idx) => (

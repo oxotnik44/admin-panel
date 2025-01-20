@@ -11,11 +11,11 @@ const ViewSelector: React.FC<ViewSelectorProps> = ({
 }) => {
   return (
     <div className="mb-4">
-      <label className="mr-2 text-sm text-black">Выберите отображение:</label>
+      <label className="mr-2 text-base text-black">Выберите отображение:</label>
       <select
         value={selectedView}
         onChange={(e) => onChange(e.target.value)}
-        className="bg-black p-2 border rounded"
+        className="bg-white text-black p-2 border border-gray-400 rounded"
       >
         <option value="product">Товар</option>
         <option value="day">День</option>
